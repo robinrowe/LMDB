@@ -40,7 +40,7 @@ int main(int argc,char * argv[])
 	long kval;
 	char *sval;
 
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 
 	E(mdb_env_create(&env));
 	E(mdb_env_set_mapsize(env, 10485760));

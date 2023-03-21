@@ -70,7 +70,7 @@ static void readhdr(void)
 	char *ptr;
 
 	flags = 0;
-	while (fgets(dbuf.mv_data, dbuf.mv_size, stdin) != NULL) {
+	while (fgets(dbuf.mv_data,(int) dbuf.mv_size, stdin) != NULL) {
 		lineno++;
 		if (!strncmp(dbuf.mv_data, "VERSION=", STRLENOF("VERSION="))) {
 			version=atoi((char *)dbuf.mv_data+STRLENOF("VERSION="));
@@ -189,7 +189,7 @@ static int readline(MDB_val *out, MDB_val *buf)
 		}
 		if (c != ' ') {
 			lineno++;
-			if (fgets(buf->mv_data, buf->mv_size, stdin) == NULL) {
+			if (fgets(buf->mv_data,(int) buf->mv_size, stdin) == NULL) {
 badend:
 				Eof = 1;
 				badend();
@@ -200,7 +200,7 @@ badend:
 			goto badend;
 		}
 	}
-	if (fgets(buf->mv_data, buf->mv_size, stdin) == NULL) {
+	if (fgets(buf->mv_data,(int) buf->mv_size, stdin) == NULL) {
 		Eof = 1;
 		return EOF;
 	}
@@ -221,7 +221,7 @@ badend:
 		}
 		c1 = buf->mv_data;
 		c1 += l2;
-		if (fgets((char *)c1, buf->mv_size+1, stdin) == NULL) {
+		if (fgets((char *)c1,(int) buf->mv_size+1, stdin) == NULL) {
 			Eof = 1;
 			badend();
 			return EOF;

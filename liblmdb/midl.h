@@ -83,13 +83,13 @@ typedef MDB_ID *MDB_IDL;
 	 * @param[in] id	The ID to search for.
 	 * @return	The index of the first ID greater than or equal to \b id.
 	 */
-unsigned mdb_midl_search( MDB_IDL ids, MDB_ID id );
+size_t mdb_midl_search( MDB_IDL ids, MDB_ID id );
 
 	/** Allocate an IDL.
 	 * Allocates memory for an IDL of the given size.
 	 * @return	IDL on success, NULL on failure.
 	 */
-MDB_IDL mdb_midl_alloc(int num);
+MDB_IDL mdb_midl_alloc(size_t num);
 
 	/** Free an IDL.
 	 * @param[in] ids	The IDL to free.
@@ -107,7 +107,7 @@ void mdb_midl_shrink(MDB_IDL *idp);
 	 * @param[in] num	Number of elements to make room for.
 	 * @return	0 on success, ENOMEM on failure.
 	 */
-int mdb_midl_need(MDB_IDL *idp, unsigned num);
+int mdb_midl_need(MDB_IDL *idp, size_t num);
 
 	/** Append an ID onto an IDL.
 	 * @param[in,out] idp	Address of the IDL to append to.

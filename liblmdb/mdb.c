@@ -1183,7 +1183,7 @@ struct MDB_txn {
 	 *	dirty/spilled pages. Thus commit(nested txn) has room to merge
 	 *	dirty_list into mt_parent after freeing hidden mt_parent pages.
 	 */
-	unsigned int	mt_dirty_room;
+	size_t	mt_dirty_room;
 };
 
 /** Enough space for 2^32 nodes with minimum of 2 keys per node. I.e., plenty.
@@ -1539,6 +1539,7 @@ mdb_strerror(int err)
 	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL, err, 0, ptr, MSGSIZE, (va_list *)buf+MSGSIZE);
+#pragma warning (disable: 4172)
 	return ptr;
 #else
 	if (err < 0)
@@ -1629,7 +1630,7 @@ mdb_page_list(MDB_page *mp)
 	pgno_t pgno = mdb_dbg_pgno(mp);
 	const char *type, *state = (MP_FLAGS(mp) & P_DIRTY) ? ", dirty" : "";
 	MDB_node *node;
-	unsigned int i, nkeys, nsize, total = 0;
+	size_t i, nkeys, nsize, total = 0;
 	MDB_val key;
 	DKBUF;
 
@@ -1857,7 +1858,7 @@ mdb_dlist_free(MDB_txn *txn)
 {
 	MDB_env *env = txn->mt_env;
 	MDB_ID2L dl = txn->mt_u.dirty_list;
-	unsigned i, n = dl[0].mid;
+	size_t i, n = dl[0].mid;
 
 	for (i = 1; i <= n; i++) {
 		mdb_dpage_free(env, dl[i].mptr);
@@ -1929,7 +1930,7 @@ mdb_page_loose(MDB_cursor *mc, MDB_page *mp)
  * @return 0 on success, non-zero on failure.
  */
 static int
-mdb_pages_xkeep(MDB_cursor *mc, unsigned pflags, int all)
+mdb_pages_xkeep(MDB_cursor *mc, unsigned pflags, size_t all)
 {
 	enum { Mask = P_SUBP|P_DIRTY|P_LOOSE|P_KEEP };
 	MDB_txn *txn = mc->mc_txn;
@@ -1987,7 +1988,7 @@ mdb_pages_xkeep(MDB_cursor *mc, unsigned pflags, int all)
 	return rc;
 }
 
-static int mdb_page_flush(MDB_txn *txn, int keep);
+static size_t mdb_page_flush(MDB_txn *txn, size_t keep);
 
 /**	Spill pages from the dirty list back to disk.
  * This is intended to prevent running into #MDB_TXN_FULL situations,
@@ -2027,7 +2028,7 @@ mdb_page_spill(MDB_cursor *m0, MDB_val *key, MDB_val *data)
 	MDB_txn *txn = m0->mc_txn;
 	MDB_page *dp;
 	MDB_ID2L dl = txn->mt_u.dirty_list;
-	unsigned int i, j, need;
+	size_t i, j, need;
 	int rc;
 
 	if (m0->mc_flags & C_SUB)
@@ -2054,7 +2055,7 @@ mdb_page_spill(MDB_cursor *m0, MDB_val *key, MDB_val *data)
 	} else {
 		/* purge deleted slots */
 		MDB_IDL sl = txn->mt_spill_pgs;
-		unsigned int num = sl[0];
+		size_t num = sl[0];
 		j=0;
 		for (i=1; i<=num; i++) {
 			if (!(sl[i] & 1))
@@ -2190,7 +2191,7 @@ mdb_page_alloc(MDB_cursor *mc, int num, MDB_page **mp)
 	MDB_txn *txn = mc->mc_txn;
 	MDB_env *env = txn->mt_env;
 	pgno_t pgno, *mop = env->me_pghead;
-	unsigned i, j, mop_len = mop ? mop[0] : 0, n2 = num-1;
+	size_t i, j, mop_len = mop ? mop[0] : 0, n2 = num-1;
 	MDB_page *np;
 	txnid_t oldest = 0, last;
 	MDB_cursor_op op;
@@ -2381,7 +2382,7 @@ mdb_page_unspill(MDB_txn *txn, MDB_page *mp, MDB_page **ret)
 {
 	MDB_env *env = txn->mt_env;
 	const MDB_txn *tx2;
-	unsigned x;
+	size_t x;
 	pgno_t pgno = mp->mp_pgno, pn = pgno << 1;
 
 	for (tx2 = txn; tx2; tx2=tx2->mt_parent) {
@@ -2853,7 +2854,7 @@ mdb_txn_begin(MDB_env *env, MDB_txn *parent, unsigned int flags, MDB_txn **ret)
 {
 	MDB_txn *txn;
 	MDB_ntxn *ntxn;
-	int rc, size, tsize;
+	size_t rc, size, tsize;
 
 	flags &= MDB_TXN_BEGIN_FLAGS;
 	flags |= env->me_flags & MDB_WRITEMAP;
@@ -3320,13 +3321,13 @@ mdb_freelist_save(MDB_txn *txn)
  * @param[in] keep number of initial pages in dirty_list to keep dirty.
  * @return 0 on success, non-zero on failure.
  */
-static int
-mdb_page_flush(MDB_txn *txn, int keep)
+static size_t
+mdb_page_flush(MDB_txn *txn, size_t keep)
 {
 	MDB_env		*env = txn->mt_env;
 	MDB_ID2L	dl = txn->mt_u.dirty_list;
 	unsigned	psize = env->me_psize, j;
-	int			i, pagecount = dl[0].mid, rc;
+	size_t		i, pagecount = dl[0].mid, rc;
 	size_t		size = 0, pos = 0;
 	pgno_t		pgno = 0;
 	MDB_page	*dp = NULL;
@@ -3505,7 +3506,7 @@ mdb_txn_commit(MDB_txn *txn)
 		MDB_page **lp;
 		MDB_ID2L dst, src;
 		MDB_IDL pspill;
-		unsigned x, y, len, ps_len;
+		size_t x, y, len, ps_len;
 
 		/* Append our free list to parent's */
 		rc = mdb_midl_append_list(&parent->mt_free_pgs, txn->mt_free_pgs);
@@ -8720,7 +8721,7 @@ mdb_page_split(MDB_cursor *mc, MDB_val *newkey, MDB_val *newdata, pgno_t newpgno
 		if (IS_LEAF2(rp)) {
 			char *split, *ins;
 			int x;
-			unsigned int lsize, rsize, ksize;
+			size_t lsize, rsize, ksize;
 			/* Move half of the keys to the right sibling */
 			x = mc->mc_ki[mc->mc_top] - split_indx;
 			ksize = mc->mc_db->md_pad;

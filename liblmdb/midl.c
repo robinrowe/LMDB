@@ -31,20 +31,20 @@
  */
 #define CMP(x,y)	 ( (x) < (y) ? -1 : (x) > (y) )
 
-unsigned mdb_midl_search( MDB_IDL ids, MDB_ID id )
+size_t mdb_midl_search( MDB_IDL ids, MDB_ID id )
 {
 	/*
 	 * binary search of id in ids
 	 * if found, returns position of id
 	 * if not found, returns first position greater than id
 	 */
-	unsigned base = 0;
-	unsigned cursor = 1;
+	size_t base = 0;
+	size_t cursor = 1;
 	int val = 0;
-	unsigned n = ids[0];
+	size_t n = ids[0];
 
 	while( 0 < n ) {
-		unsigned pivot = n >> 1;
+		size_t pivot = n >> 1;
 		cursor = base + pivot + 1;
 		val = CMP( ids[cursor], id );
 
@@ -101,7 +101,7 @@ int mdb_midl_insert( MDB_IDL ids, MDB_ID id )
 }
 #endif
 
-MDB_IDL mdb_midl_alloc(int num)
+MDB_IDL mdb_midl_alloc(size_t num)
 {
 	MDB_IDL ids = malloc((num+2) * sizeof(MDB_ID));
 	if (ids) {
@@ -128,7 +128,7 @@ void mdb_midl_shrink( MDB_IDL *idp )
 	}
 }
 
-static int mdb_midl_grow( MDB_IDL *idp, int num )
+static int mdb_midl_grow( MDB_IDL *idp, size_t num )
 {
 	MDB_IDL idn = *idp-1;
 	/* grow it */
@@ -140,7 +140,7 @@ static int mdb_midl_grow( MDB_IDL *idp, int num )
 	return 0;
 }
 
-int mdb_midl_need( MDB_IDL *idp, unsigned num )
+int mdb_midl_need( MDB_IDL *idp, size_t num )
 {
 	MDB_IDL ids = *idp;
 	num += ids[0];

@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 			if (freinfo > 1) {
 				char *bad = "";
 				size_t pg, prev;
-				ssize_t i, j, span = 0;
+				size_t i, j, span = 0;
 				j = *iptr++;
 				for (i = j, prev = 1; --i >= 0; ) {
 					pg = iptr[i];
